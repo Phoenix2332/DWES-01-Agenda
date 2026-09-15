@@ -5,7 +5,14 @@ using Agenda.Model;
 using Agenda.Repository;
 using Agenda.Service;
 using CSharpFunctionalExtensions;
+using Serilog;
 using static System.Console;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}")
+    .CreateLogger();
 
 Main();
 
@@ -17,7 +24,6 @@ void Main() {
     var db = new AppDbContext("Data Source=agenda.db");
     db.EnsureCreated();
     var cacheId = new Cache<int, Contactos>(5);
-    var cacheAlias = new Cache<string, Contactos>(5);
     IContactosService service = new ContactosService(new ContactosRepository(db), cacheId);
 
     WriteLine();
@@ -73,9 +79,11 @@ void Main() {
 }
 
 void Mostrar(string accion, int code, Result<Contactos, DomainError> resultado) {
+    WriteLine();
     WriteLine(resultado.IsSuccess
         ? $"[{Verbo(accion)} {code} {CodeNombre(code)}] {resultado.Value.Id} | {resultado.Value.Nombre} | {resultado.Value.Alias} | {resultado.Value.Telefono}"
         : $"[{Verbo(accion)} {resultado.Error.Code} {CodeNombre(code)}] {resultado.Error.Message}");
+    WriteLine();
 }
 
 string Verbo(string accion) {
