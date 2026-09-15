@@ -15,7 +15,7 @@ public class ContactosRepository(AppDbContext context) : IRepository {
 
     /// <inheritdoc />
     public IEnumerable<Contactos> GetAll(int page = 1, int pageSize = 10) {
-        _logger.Debug("Obteniendo citas: página {Page}, tamaño {PageSize}", page, pageSize);
+        _logger.Debug("[REPO-GET] Obteniendo contactos: página {Page}, tamaño {PageSize}", page, pageSize);
 
         try {
             var query = context.Contacto.AsNoTracking();
@@ -29,42 +29,42 @@ public class ContactosRepository(AppDbContext context) : IRepository {
             return entities.ToModel();
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al obtener citas");
+            _logger.Error(ex, "Error al obtener contactos");
             return [];
         }
     }
 
     /// <inheritdoc />
     public Contactos? GetById(int id) {
-        _logger.Debug("Obteniendo cita con ID {Id}", id);
+        _logger.Debug("[REPO-GET] Obteniendo contacto con ID {Id}", id);
         try {
             var entity = context.Contacto.AsNoTracking().FirstOrDefault(p => p.Id == id);
             return entity.ToModel();
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al obtener cita por ID {Id}", id);
+            _logger.Error(ex, "Error al obtener contacto por ID {Id}", id);
             return null;
         }
     }
 
     /// <inheritdoc />
     public Contactos? GetByAlias(string alias) {
-        _logger.Debug("Obteniendo cita con Alias {Alias}", alias);
+        _logger.Debug("[REPO-GET] Obteniendo contacto con Alias {Alias}", alias);
         try {
             var entity = context.Contacto.AsNoTracking().FirstOrDefault(p => p.Alias == alias);
             return entity.ToModel();
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al obtener cita con Alias {Alias}", alias);
+            _logger.Error(ex, "Error al obtener contacto con Alias {Alias}", alias);
             return null;
         }
     }
 
     /// <inheritdoc />
     public Result<Contactos, DomainError> Create(Contactos contacto) {
-        _logger.Debug("Creando nuevo contacto {Telefono}", contacto.Telefono);
+        _logger.Debug("[REPO-ADD] Creando nuevo contacto {Telefono}", contacto.Telefono);
         if (ExisteTelefono(contacto.Telefono)) {
-            _logger.Warning("No se puede crear: Telefono {Telefono} ya existe", contacto.Telefono);
+            _logger.Warning("[REPO-ADD] No se puede crear: Telefono {Telefono} ya existe", contacto.Telefono);
             return Result.Failure<Contactos, DomainError>(
                 ContactoErrors.TelefonoAlreadyExists(contacto.Telefono));
         }
@@ -79,7 +79,7 @@ public class ContactosRepository(AppDbContext context) : IRepository {
             var entity = contacto.ToEntity();
             context.Contacto.Add(entity);
             context.SaveChanges();
-            _logger.Information("Contacto creado con ID {Id}", GetById(entity.Id)!);
+            _logger.Information("[REPO-ADD] Contacto creado con ID {Id}", GetById(entity.Id)!);
             return Result.Success<Contactos, DomainError>(GetById(entity.Id)!);
         }
         catch (Exception ex) {
@@ -90,26 +90,26 @@ public class ContactosRepository(AppDbContext context) : IRepository {
 
     /// <inheritdoc />
     public Result<Contactos, DomainError> Update(int id, Contactos contacto) {
-        _logger.Debug("Actualizando contacto con ID {Id}", id);
+        _logger.Debug("[REPO-ADD] Actualizando contacto con ID {Id}", id);
         var contactoAntiguoEntity = context.Contacto.FirstOrDefault(p => p.Id == id);
         if (contactoAntiguoEntity == null)
-            return Result.Failure<Contactos, DomainError>(ContactoErrors.NotFound(id.ToString()));
+            return Result.Failure<Contactos, DomainError>(ContactoErrors.IdNotFound(id));
 
         var contactoAntiguo = contactoAntiguoEntity.ToModel();
         if (contactoAntiguo == null)
-            return Result.Failure<Contactos, DomainError>(ContactoErrors.NotFound(id.ToString()));
+            return Result.Failure<Contactos, DomainError>(ContactoErrors.IdNotFound(id));
 
         if (contacto.Telefono != contactoAntiguo.Telefono && ExisteTelefono(contacto.Telefono)) {
-            _logger.Warning("No se puede crear: Telefono {Telefono} ya existe", contacto.Telefono);
+            _logger.Warning("[REPO-ADD] No se puede crear: Telefono {Telefono} ya existe", contacto.Telefono);
             return Result.Failure<Contactos, DomainError>(
                 ContactoErrors.TelefonoAlreadyExists(contacto.Telefono));
         }
 
-        contactoAntiguoEntity.Nombre = contactoAntiguo.Nombre;
-        contactoAntiguoEntity.Alias = contactoAntiguo.Alias;
-        contactoAntiguoEntity.Telefono = contactoAntiguo.Telefono;
-        contactoAntiguoEntity.Email = contactoAntiguo.Email;
-        contactoAntiguoEntity.UpdateAt = contactoAntiguo.UpdateAt;
+        contactoAntiguoEntity.Nombre = contacto.Nombre;
+        contactoAntiguoEntity.Alias = contacto.Alias;
+        contactoAntiguoEntity.Telefono = contacto.Telefono;
+        contactoAntiguoEntity.Email = contacto.Email;
+        contactoAntiguoEntity.UpdateAt = contacto.UpdateAt;
 
         try {
             context.SaveChanges();
@@ -123,12 +123,12 @@ public class ContactosRepository(AppDbContext context) : IRepository {
 
     /// <inheritdoc />
     public Result<Contactos, DomainError> Delete(int id) {
-        _logger.Debug("Eliminando contacto con ID {Id}", id);
+        _logger.Debug("[REPO-REMOVE] Eliminando contacto con ID {Id}", id);
         try {
             var actual = context.Contacto.FirstOrDefault(p => p.Id == id);
             if (actual == null)
-                return Result.Failure<Contactos, DomainError>(ContactoErrors.NotFound(id.ToString()));
-            
+                return Result.Failure<Contactos, DomainError>(ContactoErrors.IdNotFound(id));
+
             context.Contacto.Remove(actual);
             context.SaveChanges();
             return Result.Success<Contactos, DomainError>(actual.ToModel()!);
@@ -141,7 +141,7 @@ public class ContactosRepository(AppDbContext context) : IRepository {
 
     /// <inheritdoc />
     public int CountContactos() {
-        _logger.Debug("Contando contactos");
+        _logger.Debug("[REPO-GET] Contando contactos");
         try {
             var query = context.Contacto;
             return query.Count();

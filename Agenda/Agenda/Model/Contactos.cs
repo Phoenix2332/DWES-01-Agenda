@@ -1,4 +1,4 @@
-namespace Agenda.Models;
+namespace Agenda.Model;
 
 /// <summary>
 ///     Representa un contacto en el sistema
@@ -11,7 +11,7 @@ public record Contactos {
     public string Email { get; init; } = string.Empty;
     public DateTime CreateAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdateAt { get; init; } = DateTime.UtcNow;
-    
+
     /// <summary>
     ///     Determina si dos contactos son idénticos comparando los teléfonos.
     /// </summary>

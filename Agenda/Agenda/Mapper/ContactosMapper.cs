@@ -1,5 +1,5 @@
 using Agenda.Entity;
-using Agenda.Models;
+using Agenda.Model;
 
 namespace Agenda.Mapper;
 

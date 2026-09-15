@@ -1,4 +1,3 @@
-using Agenda.Enum;
 using Agenda.Errors.Common;
 
 namespace Agenda.Errors;
@@ -6,30 +5,36 @@ namespace Agenda.Errors;
 /// <summary>
 ///     Contenedor de errores específicos del dominio de Contactos.
 /// </summary>
-public abstract record ContactoError(string Message, HttpCodigos Code) : DomainError(Message, Code) {
+public abstract record ContactoError(string Message, int Code) : DomainError(Message, Code) {
     /// <summary>
     ///     Error: contacto no encontrado por ID. → 404
     /// </summary>
-    public sealed record NotFound(string Id)
-        : ContactoError($"No se encontró el contacto con ID {Id}", HttpCodigos.NotFound);
+    public sealed record IdNotFound(int Id)
+        : ContactoError($"No se encontró el contacto con ID {Id}", 404);
+
+    /// <summary>
+    ///     Error: contacto no encontrado por ID. → 404
+    /// </summary>
+    public sealed record AliasNotFound(string Alias)
+        : ContactoError($"No se encontró el contacto con Alias {Alias}", 404);
 
     /// <summary>
     ///     Error: ya existe un contacto con ese alias. → 409
     /// </summary>
     public sealed record AliasAlreadyExists(string Alias)
-        : ContactoError($"Ya existe un contacto con el alias {Alias}.", HttpCodigos.Conflict);
+        : ContactoError($"Ya existe un contacto con el alias {Alias}.", 409);
 
     /// <summary>
     ///     Error: el teléfono ya está registrado en otro contacto. → 409
     /// </summary>
     public sealed record TelefonoAlreadyExists(int Telefono)
-        : ContactoError($"Ya existe un contacto con el teléfono {Telefono}.", HttpCodigos.Conflict);
+        : ContactoError($"Ya existe un contacto con el teléfono {Telefono}.", 409);
 
     /// <summary>
     ///     Error de base de datos. → 500
     /// </summary>
     public sealed record Database(string Details)
-        : ContactoError($"Error de base de datos: {Details}", HttpCodigos.InternalServerError);
+        : ContactoError($"Error de base de datos: {Details}", 500);
 }
 
 /// <summary>
@@ -39,8 +44,15 @@ public static class ContactoErrors {
     /// <summary>
     ///     Crea un error de contacto no encontrado.
     /// </summary>
-    public static DomainError NotFound(string id) {
-        return new ContactoError.NotFound(id);
+    public static DomainError IdNotFound(int id) {
+        return new ContactoError.IdNotFound(id);
+    }
+
+    /// <summary>
+    ///     Crea un error de contacto no encontrado.
+    /// </summary>
+    public static DomainError AliasNotFound(string alias) {
+        return new ContactoError.AliasNotFound(alias);
     }
 
     /// <summary>
